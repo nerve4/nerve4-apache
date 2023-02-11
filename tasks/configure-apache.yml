@@ -1,0 +1,157 @@
+---
+# tasks - configure-apache.yml for nerve4-apache
+
+- name: Make sure VH Directory on Rhel/Rocky
+  become: yes
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - "{{ vh_dir_rhel }}"
+    - "{{ log_dir_rhel }}"
+  when:
+    (ansible_distribution in "CentOS") or
+    (ansible_distribution in "RedHat") or
+    (ansible_distribution in "Rocky")
+
+- name: Make sure VH Directory on Ubuntu
+  become: yes
+  become_method: sudo
+  ansible.builtin.file:
+    path: "{{ vh_dir_ubuntu }}"
+    state: directory
+    mode: '0755'
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: Create apache admin group
+  ansible.builtin.group:
+    name: "{{ apache_group }}"
+    state: present
+    gid: "{{ apache_gid }}"
+
+- name: Create apache admin user
+  ansible.builtin.user:
+    name: "{{ apache_user }}"
+    comment: Apache Admin
+    create_home: false
+    uid: "{{ apache_uid }}"
+    group: "{{ apache_group }}"
+
+- name: Upload default index page on Rhel/Rocky
+  become: yes
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ vh_dir_rhel }}/index.html"
+    mode: '0644'
+  when:
+    (ansible_distribution in "CentOS") or
+    (ansible_distribution in "RedHat") or
+    (ansible_distribution in "Rocky")
+
+- name: Upload default index page on Ubuntu
+  become: yes
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ vh_dir_ubuntu }}/index.html"
+    mode: '0644'
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: Upload VH .conf on Ubuntu
+  ansible.builtin.template:
+    src: "{{ ubuntu_svc }}-vh.conf.j2"
+    dest: "/etc/{{ ubuntu_svc }}/sites-available/{{ domain }}.{{ tld }}.conf"
+    mode: '0644'
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: "Upload {{ ubuntu_svc }}.conf on Ubuntu"
+  ansible.builtin.template:
+    src: "{{ ubuntu_svc }}.conf.j2"
+    dest: "/etc/{{ ubuntu_svc }}/{{ ubuntu_svc }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: Make sure sites-available Directory on Rhel/Rocky
+  become: yes
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0644'
+  with_items:
+    - "{{ sa_dir_rhel }}"
+    - "{{ se_dir_rhel }}"
+  when:
+    (ansible_distribution in "CentOS") or
+    (ansible_distribution in "RedHat") or
+    (ansible_distribution in "Rocky")
+
+- name: Upload VH .conf on Rhel/Rocky
+  become: yes
+  ansible.builtin.template:
+    src: "{{ rhel_svc }}-vh.conf.j2"
+    dest: "/etc/{{ rhel_svc }}/sites-available/{{ domain }}.{{ tld }}.conf"
+    mode: '0644'
+  when:
+    (ansible_distribution in "CentOS") or
+    (ansible_distribution in "RedHat") or
+    (ansible_distribution in "Rocky")
+
+- name: Make sure sites-enabled symlink create on Rhel/Rocky
+  become: yes
+  ansible.builtin.file:
+    src: "/etc/{{ rhel_svc }}/sites-available/{{ domain }}.{{ tld }}.conf"
+    dest: "/etc/{{ rhel_svc }}/sites-enabled/{{ domain }}.{{ tld }}.conf"
+    owner: root
+    group: root
+    state: link
+  when:
+    (ansible_distribution in "CentOS") or
+    (ansible_distribution in "RedHat") or
+    (ansible_distribution in "Rocky")
+
+- name: "Upload {{ rhel_svc }}.conf on Rhel/Rocky"
+  ansible.builtin.template:
+    src: "{{ rhel_svc }}.conf.j2"
+    dest: "/etc/{{ rhel_svc }}/conf/{{ rhel_svc }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    (ansible_distribution in "CentOS") or
+    (ansible_distribution in "RedHat") or
+    (ansible_distribution in "Rocky")
+
+- name: Enable new conf
+  become: yes
+  ansible.builtin.shell: |
+    a2ensite {{ domain }}.{{ tld }}.conf
+    a2dissite 000-default.conf
+    apache2ctl configtest
+  args:
+    chdir: /etc/{{ ubuntu_svc }}/sites-available/
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: Enable and restart apache on Ubuntu
+  ansible.builtin.systemd:
+    name: "{{ ubuntu_svc }}"
+    state: restarted
+    enabled: yes
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: Enable and restart apache on Rhel/Rocky
+  ansible.builtin.systemd:
+    name: "{{ rhel_svc }}"
+    state: restarted
+    enabled: yes
+  when:
+    (ansible_distribution in "CentOS") or
+    (ansible_distribution in "RedHat") or
+    (ansible_distribution in "Rocky")

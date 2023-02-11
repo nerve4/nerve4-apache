@@ -1,0 +1,17 @@
+---
+# tasks - rhel-install-apache.yml for nerve4-apache
+
+- name: Install Apache on Rhel 7.x
+  ansible.builtin.yum:
+    name: "{{ rhel_svc }}"
+    state: present
+  when:
+    - ansible_distribution_major_version == "7"
+
+- name: Install Apache on Rhel 8.x / Rocky Linux
+  ansible.builtin.dnf:
+    name: "{{ rhel_svc }}"
+    state: present
+  when:
+    (ansible_distribution_major_version == "8") or
+    (ansible_distribution in "Rocky")

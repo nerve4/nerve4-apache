@@ -1,0 +1,14 @@
+---
+# tasks - main.yml for nerve4-apache
+
+- include: rhel-install-apache.yml
+  when: 
+    (ansible_distribution == "CentOS") or
+    (ansible_distribution == "RedHat") or
+    (ansible_distribution in "Rocky")
+
+- include: ubuntu-install-apache.yml
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- include: configure-apache.yml
