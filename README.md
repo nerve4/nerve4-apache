@@ -1,4 +1,4 @@
-# apache
+# apache-httpd
 
 An Ansible role that installs apache to Ubuntu and Rhel. More info about apache: [link](https://apache.org/)
 
