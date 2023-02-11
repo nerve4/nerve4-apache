@@ -1,0 +1,6 @@
+---
+# tasks - ubuntu-install-apache.yml for nerve4-apache
+
+- name: Install Apache on Ubuntu
+  ansible.builtin.apt:
+    pkg: "{{ ubuntu_svc }}"
