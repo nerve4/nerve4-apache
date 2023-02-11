@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- nerve4-apache
+- nerve4-apache-httpd
 
 
 ### Changed
