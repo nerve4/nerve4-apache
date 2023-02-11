@@ -1,6 +1,6 @@
 # apache-httpd
 
-An Ansible role that installs apache to Ubuntu and Rhel. More info about apache: [link](https://apache.org/)
+An Ansible role that installs apache-httpd to Ubuntu and Rhel. More info about apache: [link](https://apache.org/)
 
 
 ## Requirements
@@ -32,7 +32,7 @@ Including an example of how to use your role (for instance, with variables passe
     - vars/main.yml
     
   roles:
-    - nerve4-apache
+    - nerve4-apache-httpd
 ```
 
 
